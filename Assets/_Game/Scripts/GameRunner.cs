@@ -28,13 +28,15 @@ namespace _Game.Scripts {
         [SerializeField] private float _pointsPerFail;
         [SerializeField] private float _pointsPerSuccess;
         [SerializeField] private float _pointsPerSecondCantSpawnTasks;
+        [SerializeField] private float _spawnDelay;
+        [SerializeField] private float _spawnDelayChange;
 
         private float _deathPoints;
         private float DeathPoints {
             get => _deathPoints;
             set {
-                _deathPoints = value;
-                _deathBar.CurrentValue = Mathf.Clamp(_deathPoints, 0f, _pointsToDie);
+                _deathPoints = Mathf.Clamp(value, 0f, _pointsToDie);;
+                _deathBar.CurrentValue = _deathPoints;
 
                 if (_deathPoints >= _pointsToDie) {
                     EndGame();
@@ -55,6 +57,7 @@ namespace _Game.Scripts {
         private Rng _rng;
         private bool _cantSpawnTasks;
         private Coroutine _spawnTasksCoroutine;
+        private float _currentSpawnDelay;
 
         public void StartGame(DataStorage dataStorage) {
             InitUI();
@@ -63,13 +66,14 @@ namespace _Game.Scripts {
 
             var tasks = dataStorage.Tasks;
             _rng = new Rng(666);
+            var shuffledTasks = _rng.NextShuffle(tasks);
             // TODO shuffle in the future
             
             _departmentSlots.ForEach(slot => slot.slot.OnSetObject.Subscribe(OnTaskAssigned));
             _cantSpawnTasks = false;
             _gameInProgress = true;
 
-            _spawnTasksCoroutine = StartCoroutine(SpawnTasks(tasks.Cycle()));
+            _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
         }
 
         private void EndGame() {
@@ -115,6 +119,8 @@ namespace _Game.Scripts {
         }
 
         private IEnumerator SpawnTasks(IEnumerable<TaskData> tasks) {
+            _currentSpawnDelay = _spawnDelay;
+            
             foreach (var taskData in tasks) {
                 yield return WaitForFreeSlot();
 
@@ -128,7 +134,8 @@ namespace _Game.Scripts {
                     _taskWindow.Show();
                 });
 
-                yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(_currentSpawnDelay);
+                _currentSpawnDelay -= _spawnDelayChange;
             }
         }
 

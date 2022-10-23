@@ -10,13 +10,11 @@ namespace _Game.Scripts.Data {
 
     public static class DepartmentHelper {
         public static Department ToDepartment(this string serialized) {
-            return serialized switch {
-                "Client" => Department.CLI,
-                "VFX" => Department.VFX,
-                "PM" => Department.PM,
-                "3D" => Department._3D,
-                _ => throw new ArgumentOutOfRangeException(nameof(serialized), serialized, null)
-            };
+            if (!Enum.TryParse(serialized, out Department department)) {
+                throw new ArgumentOutOfRangeException(nameof(serialized), serialized, null);
+            }
+
+            return department;
         }
     }
 }

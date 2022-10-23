@@ -13,7 +13,7 @@ namespace _Game.Scripts.UI {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private TextMeshProUGUI _id;
 
-        private const float AnimationTime = 0.4f;
+        private const float AnimationTime = 0.2f;
 
         private void Awake() {
             _closeButton.onClick.AddListener(() => Hide());
@@ -21,7 +21,7 @@ namespace _Game.Scripts.UI {
 
         public void Load(TaskData task) {
             _title.text = task.title;
-            _text.text = task.text;
+            _text.text = task.Text;
             _id.text = task.id;
         }
 

@@ -67,6 +67,7 @@ namespace _Game.Scripts.Drag {
             dragComponent.Container = _currentDrop != null ? _currentDrop : dragComponent.Container;
             dragComponent.OnEndDrag.Unsubscribe(OnEndDrag);
             _isDragging = false;
+            _currentDrop = null;
 
             foreach (var dropComponent in _dropComponents) {
                 dropComponent.State.Value = DropComponent.DropState.Idle;
