@@ -4,15 +4,14 @@ using UnityEngine;
 
 namespace _Game.Scripts.Drag {
     public class DragComponent : MonoBehaviour {
-        [SerializeField] private DropComponent _debugCurrentDrop;
-        [SerializeField] private string _type;
-        public string Type => _type;
-        
         private readonly Action<DragComponent> _onStartDrag;
         public readonly Event<DragComponent> OnStartDrag;
 
         private readonly Action<DragComponent> _onEndDrag;
         public readonly Event<DragComponent> OnEndDrag;
+
+        private readonly Action<DragComponent> _onClick;
+        public readonly Event<DragComponent> OnClick;
 
         private DropComponent _dropComponent;
 
@@ -24,6 +23,10 @@ namespace _Game.Scripts.Drag {
                 }
 
                 _dropComponent = value;
+                if (_dropComponent == null) {
+                    return;
+                } 
+
                 _dropComponent.HeldObject = this;
 
                 transform.SetParent(_dropComponent.transform);
@@ -41,15 +44,16 @@ namespace _Game.Scripts.Drag {
         public DragComponent() {
             OnStartDrag = new Event<DragComponent>(out _onStartDrag);
             OnEndDrag = new Event<DragComponent>(out _onEndDrag);
+            OnClick = new Event<DragComponent>(out _onClick);
         }
 
         private void Start() {
-            Container = _debugCurrentDrop;
             DragController.Instance.Register(this);
         }
 
         private void OnDestroy() {
             DragController.Instance.Unregister(this);
+            Container = null;
         }
         
         private void OnMouseDrag() {
@@ -88,6 +92,10 @@ namespace _Game.Scripts.Drag {
         private void EndDrag() {
             if (_initialDragPosition != null) {
                 _initialDragPosition = null;
+
+                if (!_startedDrag) {
+                    _onClick(this);
+                }
 
                 _startedDrag = false;
                 _justFinishedDrag = true;

@@ -2,8 +2,12 @@
 
 namespace _Game.Scripts {
     public class App : MonoBehaviour {
+        [SerializeField] private DataStorage _dataStorage;
+        [SerializeField] private GameRunner _gameRunner;
+
         private void Start() {
-            Debug.Log("Start");
+            _dataStorage.Init();
+            _gameRunner.StartGame(_dataStorage);
         }
     }
 }

@@ -4,21 +4,21 @@ using UnityEngine;
 
 namespace _Game.Scripts.Drag {
     public class DropComponent : MonoBehaviour {
-        [SerializeField] private string _type;
-        public string Type => _type;
+        [SerializeField] private bool _canBeDroppedTo;
+        public bool CanBeDroppedTo => _canBeDroppedTo;
 
         private readonly Action<DropComponent, bool> _onSelectDrop;
         public readonly Event<DropComponent, bool> OnSelectDrop;
 
-        private readonly Action<DragComponent> _onSetObject;
-        public readonly Event<DragComponent> OnSetObject;
+        private readonly Action<DropComponent> _onSetObject;
+        public readonly Event<DropComponent> OnSetObject;
 
         private DragComponent _heldObject;
         public DragComponent HeldObject {
             get => _heldObject;
             set {
                 _heldObject = value;
-                _onSetObject(_heldObject);
+                _onSetObject(this);
             }
         }
 
@@ -28,7 +28,7 @@ namespace _Game.Scripts.Drag {
 
         public DropComponent() {
             OnSelectDrop = new Event<DropComponent, bool>(out _onSelectDrop);
-            OnSetObject = new Event<DragComponent>(out _onSetObject);
+            OnSetObject = new Event<DropComponent>(out _onSetObject);
         }
 
         private void Start() {

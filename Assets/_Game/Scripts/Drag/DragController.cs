@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using GeneralUtils;
 using UnityEngine;
 
@@ -54,10 +55,8 @@ namespace _Game.Scripts.Drag {
             dragComponent.OnEndDrag.Subscribe(OnEndDrag);
             dragComponent.Container.State.Value = DropComponent.DropState.StillHolding;
 
-            foreach (var dropComponent in _dropComponents) {
-                if (CanDrop(dragComponent, dropComponent)) {
-                    dropComponent.State.Value = DropComponent.DropState.Ready;
-                }
+            foreach (var dropComponent in _dropComponents.Where(CanDrop)) {
+                dropComponent.State.Value = DropComponent.DropState.Ready;
             }
         }
 
@@ -75,7 +74,7 @@ namespace _Game.Scripts.Drag {
         }
 
         private void OnSelectDrop(DropComponent dropComponent, bool selected) {
-            if (!_isDragging) {
+            if (!_isDragging || !CanDrop(dropComponent)) {
                 return;
             }
 
@@ -94,8 +93,8 @@ namespace _Game.Scripts.Drag {
             }
         }
 
-        private static bool CanDrop(DragComponent drag, DropComponent drop) {
-            return drop.HeldObject == null && (string.IsNullOrEmpty(drop.Type) || drag.Type == drop.Type);
+        private static bool CanDrop(DropComponent drop) {
+            return drop.HeldObject == null && drop.CanBeDroppedTo;
         }
     }
 }
