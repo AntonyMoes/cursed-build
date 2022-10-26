@@ -8,10 +8,9 @@ using _Game.Scripts.UI;
 using GeneralUtils;
 using TMPro;
 using UnityEngine;
-using Object = System.Object;
 
 namespace _Game.Scripts {
-    public class GameRunner : MonoBehaviour {
+    public class GameRunner : UIElement {
         [Header("UI")]
         [SerializeField] private ProgressBar _deathBar;
         [SerializeField] private TextMeshProUGUI _taskCounter;
@@ -39,7 +38,7 @@ namespace _Game.Scripts {
                 _deathBar.CurrentValue = _deathPoints;
 
                 if (_deathPoints >= _pointsToDie) {
-                    EndGame();
+                    EndGame(false);
                 }
             }
         }
@@ -53,22 +52,31 @@ namespace _Game.Scripts {
             }
         }
 
+        private Action<bool, int> _onEnd;
         private bool _gameInProgress;
         private Rng _rng;
         private bool _cantSpawnTasks;
         private Coroutine _spawnTasksCoroutine;
         private float _currentSpawnDelay;
+        private readonly List<Task> _tasks = new List<Task>();
 
-        public void StartGame(DataStorage dataStorage) {
+        public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd) {
+            _onEnd = onEnd;
+
+            _tasks.ToArray().ForEach(DestroyTask);
+
             InitUI();
             DeathPoints = 0f;
             FinishedTasks = 0;
 
+            Show(() => PerformStartGame(dataStorage));
+        }
+
+        private void PerformStartGame(DataStorage dataStorage) {
             var tasks = dataStorage.Tasks;
-            _rng = new Rng(666);
+            _rng = new Rng(Rng.RandomSeed);
             var shuffledTasks = _rng.NextShuffle(tasks);
-            // TODO shuffle in the future
-            
+
             _departmentSlots.ForEach(slot => slot.slot.OnSetObject.Subscribe(OnTaskAssigned));
             _cantSpawnTasks = false;
             _gameInProgress = true;
@@ -76,13 +84,13 @@ namespace _Game.Scripts {
             _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
         }
 
-        private void EndGame() {
+        private void EndGame(bool win) {
             _departmentSlots.ForEach(slot => slot.slot.OnSetObject.Unsubscribe(OnTaskAssigned));
             _gameInProgress = false;
 
             StopCoroutine(_spawnTasksCoroutine);
 
-            Debug.LogError("YOU FAILED!");
+            Hide(() => _onEnd?.Invoke(win, FinishedTasks));
         }
 
         private void InitUI() {
@@ -105,7 +113,7 @@ namespace _Game.Scripts {
                 DeathPoints += _pointsPerFail;
             }
 
-            Destroy(taskObject.gameObject);
+            DestroyTask(task);
         }
 
         private void Update() {
@@ -127,6 +135,7 @@ namespace _Game.Scripts {
                 var freeSlots = GetFreeSlots().ToArray();
                 var slot = _rng.NextChoice(freeSlots);
                 var task = Instantiate(_taskPrefab, _spawnRoot);
+                _tasks.Add(task);
                 task.Load(taskData);
                 task.DragComponent.Container = slot;
                 task.DragComponent.OnClick.Subscribe(_ => {
@@ -137,6 +146,14 @@ namespace _Game.Scripts {
                 yield return new WaitForSeconds(_currentSpawnDelay);
                 _currentSpawnDelay -= _spawnDelayChange;
             }
+            
+            yield return new WaitUntil(() => _tasks.Count == 0);
+            EndGame(true);
+        }
+
+        private void DestroyTask(Task task) {
+            _tasks.Remove(task);
+            Destroy(task.gameObject);
         }
 
         private IEnumerator WaitForFreeSlot() {
