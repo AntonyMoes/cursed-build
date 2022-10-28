@@ -5,6 +5,7 @@ using System.Linq;
 using _Game.Scripts.Data;
 using _Game.Scripts.Drag;
 using _Game.Scripts.UI;
+using DG.Tweening;
 using GeneralUtils;
 using TMPro;
 using UnityEngine;
@@ -15,12 +16,14 @@ namespace _Game.Scripts {
         [SerializeField] private ProgressBar _deathBar;
         [SerializeField] private TextMeshProUGUI _taskCounter;
         [SerializeField] private TaskWindow _taskWindow;
+        [SerializeField] private CanvasGroup _group;
         
         [Header("Objects")]
         [SerializeField] private DropComponent[] _taskSlots;
         [SerializeField] private DepartmentSlot[] _departmentSlots;
         [SerializeField] private Task _taskPrefab;
         [SerializeField] private Transform _spawnRoot;
+        [SerializeField] private RectTransform _buildPoint;
 
         [Header("Settings")]
         [SerializeField] private float _pointsToDie;
@@ -53,6 +56,7 @@ namespace _Game.Scripts {
         }
 
         private Action<bool, int> _onEnd;
+        private Build _build;
         private bool _gameInProgress;
         private Rng _rng;
         private bool _cantSpawnTasks;
@@ -60,8 +64,9 @@ namespace _Game.Scripts {
         private float _currentSpawnDelay;
         private readonly List<Task> _tasks = new List<Task>();
 
-        public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd) {
+        public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd, Build build) {
             _onEnd = onEnd;
+            _build = build;
 
             _tasks.ToArray().ForEach(DestroyTask);
 
@@ -168,6 +173,30 @@ namespace _Game.Scripts {
 
         private IEnumerable<DropComponent> GetFreeSlots() {
             return _taskSlots.Where(slot => slot.HeldObject == null);
+        }
+
+        protected override void PerformShow(Action onDone = null) {
+            // _build.transform.position = _buildPoint.position;
+            // _build.RectTransform.anchoredPosition += Vector2.up * Screen.height;
+            _group.alpha = 0f;
+            _group.interactable = false;
+
+            const float duration = 0.5f;
+            DOTween.Sequence()
+                .Append(_build.transform.DOMove(_buildPoint.position, duration).SetEase(Ease.InOutSine))
+                .Append(_group.DOFade(1f, duration))
+                .OnComplete(() => {
+                    _group.interactable = true;
+                    onDone?.Invoke();
+                });
+        }
+
+        protected override void PerformHide(Action onDone = null) {
+            _group.interactable = false;
+
+            const float duration = 0.5f;
+            _group.DOFade(0f, duration)
+                .OnComplete(() => onDone?.Invoke());
         }
 
         [Serializable]
