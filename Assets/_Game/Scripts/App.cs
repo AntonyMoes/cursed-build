@@ -9,7 +9,15 @@ namespace _Game.Scripts {
         [SerializeField] private GameRunner _gameRunner;
         [SerializeField] private Build _build;
 
+        private const int HadTutorialValue = 100;
+        private const int DidNotHaveTutorialValue = -66;
+        private const string TutorialKey = "TUTORIAL";
+
         private void Start() {
+#if UNITY_EDITOR
+            PlayerPrefs.DeleteAll();
+#endif
+
             _dataStorage.Init();
 
             _startWindow.Load(StartGame, OnQuit, _build);
@@ -17,7 +25,9 @@ namespace _Game.Scripts {
         }
 
         private void StartGame() {
-            _gameRunner.StartGame(_dataStorage, OnEnd, _build);
+            var showTutorial = PlayerPrefs.GetInt(TutorialKey, DidNotHaveTutorialValue) != HadTutorialValue;
+            _gameRunner.StartGame(_dataStorage, OnEnd, _build, showTutorial);
+            PlayerPrefs.SetInt(TutorialKey, HadTutorialValue);
         }
 
         private void OnEnd(bool win, int score) {

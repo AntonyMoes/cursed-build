@@ -25,6 +25,7 @@ namespace _Game.Scripts {
         [SerializeField] private Task _taskPrefab;
         [FormerlySerializedAs("_spawnRoot")] [SerializeField] private Transform _moveRoot;
         [SerializeField] private RectTransform _buildPoint;
+        [SerializeField] private TutorialController _tutorialController;
 
         [Header("Settings")]
         [SerializeField] private float _pointsToDie;
@@ -39,7 +40,6 @@ namespace _Game.Scripts {
             get => _deathPoints;
             set {
                 _deathPoints = Mathf.Clamp(value, 0f, _pointsToDie);
-                // _deathBar.CurrentValue = _deathPoints;
                 _deathBarTween?.Kill();
                 _deathBarTween = DOVirtual.Float(_deathBar.CurrentValue, _deathPoints, DeathBarAnimationDuration, 
                     val => _deathBar.CurrentValue = val);
@@ -64,6 +64,7 @@ namespace _Game.Scripts {
         private bool _gameInProgress;
         private Rng _rng;
         private bool _cantSpawnTasks;
+        private bool _spawnPaused;
         private Coroutine _spawnTasksCoroutine;
         private float _currentSpawnDelay;
         private readonly List<Task> _tasks = new List<Task>();
@@ -71,21 +72,21 @@ namespace _Game.Scripts {
         private Tween _deathBarTween;
         private const float TaskDespawnDuration = 0.3f;
 
-        public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd, Build build) {
+        public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd, Build build, bool showTutorial) {
             _onEnd = onEnd;
             _build = build;
 
             _tasks.ToArray().ForEach(DestroyTask);
-
-            InitUI();
-            _deathPoints = 0f;
+            
+            _deathBar.Load(0f, _pointsToDie);
             _deathBar.CurrentValue = 0f;
+            _deathPoints = 0f;
             FinishedTasks = 0;
 
-            Show(() => PerformStartGame(dataStorage));
+            Show(() => PerformStartGame(dataStorage, showTutorial));
         }
 
-        private void PerformStartGame(DataStorage dataStorage) {
+        private void PerformStartGame(DataStorage dataStorage, bool showTutorial) {
             var tasks = dataStorage.Tasks;
             _rng = new Rng(Rng.RandomSeed);
             var shuffledTasks = _rng.NextShuffle(tasks);
@@ -94,20 +95,38 @@ namespace _Game.Scripts {
             _cantSpawnTasks = false;
             _gameInProgress = true;
 
-            _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
+            
+            if (showTutorial) {
+                _spawnPaused = true;
+                _tutorialController.StartTutorial(() => {
+                    _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
+                }, () => {
+                    _spawnPaused = false;
+                }, onDone => ShowTaskWindow(_tasks.First().Data, onDone), _taskWindow.Hide);
+            } else {
+                _spawnPaused = false;
+                _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
+            }
         }
+
+        #region For Tutorial
+
+        private void StartSpawning(IEnumerable<TaskData> tasks, bool andPause) {
+            _spawnTasksCoroutine = StartCoroutine(SpawnTasks(tasks));
+        }
+
+        #endregion
 
         private void EndGame(bool win) {
             _departmentSlots.ForEach(slot => slot.slot.OnSetObject.Unsubscribe(OnTaskAssigned));
             _gameInProgress = false;
 
-            StopCoroutine(_spawnTasksCoroutine);
+            if (_spawnTasksCoroutine != null) {
+                StopCoroutine(_spawnTasksCoroutine);
+                _spawnTasksCoroutine = null;
+            }
 
             Hide(() => _onEnd?.Invoke(win, FinishedTasks));
-        }
-
-        private void InitUI() {
-            _deathBar.Load(0f, _pointsToDie);
         }
 
         private void OnTaskAssigned(DropComponent slot) {
@@ -154,20 +173,22 @@ namespace _Game.Scripts {
                 var task = Instantiate(_taskPrefab);
                 _tasks.Add(task);
                 task.Load(taskData);
-                // task.DragComponent.Container = slot;
-                task.DragComponent.OnClick.Subscribe(_ => {
-                    _taskWindow.Load(taskData);
-                    _taskWindow.Show();
-                });
+                task.DragComponent.OnClick.Subscribe(_ => ShowTaskWindow(taskData));
 
                 _build.AnimateSpawnTask(task, _moveRoot, slot);
 
+                yield return new WaitWhile(() => _spawnPaused);
                 yield return new WaitForSeconds(_currentSpawnDelay);
                 _currentSpawnDelay -= _spawnDelayChange;
             }
 
             yield return new WaitUntil(() => _tasks.Count == 0);
             EndGame(true);
+        }
+
+        private void ShowTaskWindow(TaskData data, Action onDone = null) {
+            _taskWindow.Load(data);
+            _taskWindow.Show(onDone);
         }
 
         private void DestroyTask(Task task) {
@@ -190,8 +211,6 @@ namespace _Game.Scripts {
         }
 
         protected override void PerformShow(Action onDone = null) {
-            // _build.transform.position = _buildPoint.position;
-            // _build.RectTransform.anchoredPosition += Vector2.up * Screen.height;
             _group.alpha = 0f;
             _group.interactable = false;
 

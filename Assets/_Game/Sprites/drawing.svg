@@ -25,14 +25,14 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.504239"
-     inkscape:cx="1920.5724"
-     inkscape:cy="-196.11245"
-     inkscape:window-width="1920"
-     inkscape:window-height="1017"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:cx="1729.4459"
+     inkscape:cy="568.06133"
+     inkscape:window-width="2560"
+     inkscape:window-height="1361"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer3" />
+     inkscape:current-layer="layer5-4-3" />
   <defs
      id="defs2">
     <rect
@@ -276,12 +276,28 @@
   <g
      inkscape:groupmode="layer"
      id="layer5-4-3"
+     inkscape:label="mask"
+     transform="translate(10.031225,204.4817)"
+     style="stroke:none">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.154;stroke-dasharray:none;stroke-opacity:1"
+       id="rect111-1-2-1"
+       width="7.485909"
+       height="7.0879049"
+       x="445.29251"
+       y="5.4421525"
+       ry="1.778917"
+       inkscape:label="background" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5-4-3-5"
      inkscape:label="taskSlotBack"
-     transform="translate(-48.540751,175.81133)"
+     transform="translate(-90.49633,176.33155)"
      style="stroke:none">
     <rect
        style="fill:#ffffff;fill-opacity:0.256055;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
-       id="rect111-1-2-1"
+       id="rect111-1-2-1-4"
        width="79.106552"
        height="28.226166"
        x="445.29251"
@@ -339,7 +355,7 @@
          inkscape:label="task"><tspan
            x="279.22461"
            y="260.9176"
-           id="tspan1123">FT-99999</tspan></text>
+           id="tspan1095">FT-99999</tspan></text>
       <text
          xml:space="preserve"
          transform="scale(0.26458333)"
@@ -350,10 +366,10 @@
          y="0"><tspan
            x="141.77344"
            y="211.74377"
-           id="tspan1125">Поправить сортинг декора </tspan><tspan
+           id="tspan1097">Поправить сортинг декора </tspan><tspan
            x="141.77344"
            y="227.74377"
-           id="tspan1127">на этом сраном декоре</tspan></text>
+           id="tspan1099">на этом сраном декоре</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,1.5054531,-11.918171)"
@@ -362,7 +378,7 @@
          inkscape:label="project"><tspan
            x="135.60938"
            y="308.10119"
-           id="tspan1129">Familytown</tspan></text>
+           id="tspan1101">Familytown</tspan></text>
     </g>
   </g>
   <g
@@ -473,9 +489,9 @@
        inkscape:label="aab"><tspan
          x="1866.2812"
          y="-153.94931"
-         id="tspan1133"><tspan
+         id="tspan1105"><tspan
            style="text-align:center;text-anchor:middle"
-           id="tspan1131">AAB</tspan></tspan></text>
+           id="tspan1103">AAB</tspan></tspan></text>
     <g
        id="g16679"
        inkscape:label="eye"
