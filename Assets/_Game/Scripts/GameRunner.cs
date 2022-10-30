@@ -9,6 +9,7 @@ using DG.Tweening;
 using GeneralUtils;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _Game.Scripts {
     public class GameRunner : UIElement {
@@ -22,7 +23,7 @@ namespace _Game.Scripts {
         [SerializeField] private DropComponent[] _taskSlots;
         [SerializeField] private DepartmentSlot[] _departmentSlots;
         [SerializeField] private Task _taskPrefab;
-        [SerializeField] private Transform _spawnRoot;
+        [FormerlySerializedAs("_spawnRoot")] [SerializeField] private Transform _moveRoot;
         [SerializeField] private RectTransform _buildPoint;
 
         [Header("Settings")]
@@ -37,8 +38,11 @@ namespace _Game.Scripts {
         private float DeathPoints {
             get => _deathPoints;
             set {
-                _deathPoints = Mathf.Clamp(value, 0f, _pointsToDie);;
-                _deathBar.CurrentValue = _deathPoints;
+                _deathPoints = Mathf.Clamp(value, 0f, _pointsToDie);
+                // _deathBar.CurrentValue = _deathPoints;
+                _deathBarTween?.Kill();
+                _deathBarTween = DOVirtual.Float(_deathBar.CurrentValue, _deathPoints, DeathBarAnimationDuration, 
+                    val => _deathBar.CurrentValue = val);
 
                 if (_deathPoints >= _pointsToDie) {
                     EndGame(false);
@@ -63,6 +67,9 @@ namespace _Game.Scripts {
         private Coroutine _spawnTasksCoroutine;
         private float _currentSpawnDelay;
         private readonly List<Task> _tasks = new List<Task>();
+        private const float DeathBarAnimationDuration = 0.3f;
+        private Tween _deathBarTween;
+        private const float TaskDespawnDuration = 0.3f;
 
         public void StartGame(DataStorage dataStorage, Action<bool, int> onEnd, Build build) {
             _onEnd = onEnd;
@@ -71,7 +78,8 @@ namespace _Game.Scripts {
             _tasks.ToArray().ForEach(DestroyTask);
 
             InitUI();
-            DeathPoints = 0f;
+            _deathPoints = 0f;
+            _deathBar.CurrentValue = 0f;
             FinishedTasks = 0;
 
             Show(() => PerformStartGame(dataStorage));
@@ -118,7 +126,11 @@ namespace _Game.Scripts {
                 DeathPoints += _pointsPerFail;
             }
 
-            DestroyTask(task);
+            task.DragComponent.Container = null;
+            task.transform
+                .DOScale(0, TaskDespawnDuration)
+                .SetEase(Ease.InBack)
+                .OnComplete(() => DestroyTask(task));
         }
 
         private void Update() {
@@ -139,19 +151,21 @@ namespace _Game.Scripts {
 
                 var freeSlots = GetFreeSlots().ToArray();
                 var slot = _rng.NextChoice(freeSlots);
-                var task = Instantiate(_taskPrefab, _spawnRoot);
+                var task = Instantiate(_taskPrefab);
                 _tasks.Add(task);
                 task.Load(taskData);
-                task.DragComponent.Container = slot;
+                // task.DragComponent.Container = slot;
                 task.DragComponent.OnClick.Subscribe(_ => {
                     _taskWindow.Load(taskData);
                     _taskWindow.Show();
                 });
 
+                _build.AnimateSpawnTask(task, _moveRoot, slot);
+
                 yield return new WaitForSeconds(_currentSpawnDelay);
                 _currentSpawnDelay -= _spawnDelayChange;
             }
-            
+
             yield return new WaitUntil(() => _tasks.Count == 0);
             EndGame(true);
         }

@@ -14,6 +14,10 @@ namespace _Game.Scripts {
 
         public TaskData Data { get; private set; }
 
+        public bool Enabled {
+            set => _dragComponent.enabled = value;
+        }
+
         public void Load(TaskData data) {
             Data = data;
 

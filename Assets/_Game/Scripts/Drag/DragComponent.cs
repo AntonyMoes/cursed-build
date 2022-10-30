@@ -25,12 +25,12 @@ namespace _Game.Scripts.Drag {
                 _dropComponent = value;
                 if (_dropComponent == null) {
                     return;
-                } 
-
-                _dropComponent.HeldObject = this;
+                }
 
                 transform.SetParent(_dropComponent.transform);
                 ((RectTransform) transform).anchoredPosition = Vector2.zero;
+
+                _dropComponent.HeldObject = this;
             }
         }
 
@@ -55,8 +55,12 @@ namespace _Game.Scripts.Drag {
             DragController.Instance.Unregister(this);
             Container = null;
         }
-        
+
         private void OnMouseDrag() {
+            if (!enabled) {
+                return;
+            }
+
             if (_justFinishedDrag) {
                 _justFinishedDrag = false;
                 return;
