@@ -15,6 +15,10 @@ namespace _Game.Scripts.UI {
         private Build _build;
 
         private void Awake() {
+#if UNITY_WEBGL
+            _exitButton.gameObject.SetActive(false);
+#endif
+
             _startGameButton.onClick.AddListener(OnStart);
             _exitButton.onClick.AddListener(OnExit);
         }
