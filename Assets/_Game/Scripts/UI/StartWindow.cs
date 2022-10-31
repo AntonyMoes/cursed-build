@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 namespace _Game.Scripts.UI {
     public class StartWindow : UIElement {
-        [SerializeField] private Button _startGameButton;
-        [SerializeField] private Button _exitButton;
+        [SerializeField] private SimpleButton _startGameButton;
+        [SerializeField] private SimpleButton _exitButton;
         [SerializeField] private RectTransform _buildPoint;
         [SerializeField] private CanvasGroup _group;
 
@@ -19,8 +19,8 @@ namespace _Game.Scripts.UI {
             _exitButton.gameObject.SetActive(false);
 #endif
 
-            _startGameButton.onClick.AddListener(OnStart);
-            _exitButton.onClick.AddListener(OnExit);
+            _startGameButton.OnClick.Subscribe(OnStart);
+            _exitButton.OnClick.Subscribe(OnExit);
         }
 
         public void Load(Action startGame, Action quit, Build build) {
@@ -53,11 +53,11 @@ namespace _Game.Scripts.UI {
                 .OnComplete(() => onDone?.Invoke());
         }
 
-        private void OnStart() {
+        private void OnStart(SimpleButton _) {
             Hide(_startGame);
         }
 
-        private void OnExit() {
+        private void OnExit(SimpleButton _) {
             _quit?.Invoke();
         }
     }

@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace _Game.Scripts.UI {
     public class RestartWindow : UIElement {
         [SerializeField] private TextMeshProUGUI _score;
-        [SerializeField] private Button _restartGameButton;
-        [SerializeField] private Button _exitButton;
+        [SerializeField] private SimpleButton _restartGameButton;
+        [SerializeField] private SimpleButton _exitButton;
         [SerializeField] private RectTransform _buildPoint;
         [SerializeField] private CanvasGroup _group;
 
@@ -22,8 +22,8 @@ namespace _Game.Scripts.UI {
             _exitButton.gameObject.SetActive(false);
 #endif
 
-            _restartGameButton.onClick.AddListener(OnRestart);
-            _exitButton.onClick.AddListener(OnExit);
+            _restartGameButton.OnClick.Subscribe(OnRestart);
+            _exitButton.OnClick.Subscribe(OnExit);
         }
 
         public void Load(bool win, int score, Action restartGame, Action quit, Build build) {
@@ -56,11 +56,11 @@ namespace _Game.Scripts.UI {
                 .OnComplete(() => onDone?.Invoke());
         }
 
-        private void OnRestart() {
+        private void OnRestart(SimpleButton _) {
             Hide(_restartGame);
         }
 
-        private void OnExit() {
+        private void OnExit(SimpleButton _) {
             _quit?.Invoke();
         }
     }

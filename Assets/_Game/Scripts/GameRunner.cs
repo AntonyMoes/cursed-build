@@ -97,25 +97,22 @@ namespace _Game.Scripts {
 
             
             if (showTutorial) {
+                AudioController.Instance.SetMusicVolume(0.3f);
+                AudioController.Instance.PlayMusic();
                 _spawnPaused = true;
                 _tutorialController.StartTutorial(() => {
                     _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
                 }, () => {
+                    AudioController.Instance.SetMusicVolume(1f, false);
                     _spawnPaused = false;
                 }, onDone => ShowTaskWindow(_tasks.First().Data, onDone), _taskWindow.Hide);
             } else {
+                AudioController.Instance.SetMusicVolume(1f);
+                AudioController.Instance.PlayMusic();
                 _spawnPaused = false;
                 _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
             }
         }
-
-        #region For Tutorial
-
-        private void StartSpawning(IEnumerable<TaskData> tasks, bool andPause) {
-            _spawnTasksCoroutine = StartCoroutine(SpawnTasks(tasks));
-        }
-
-        #endregion
 
         private void EndGame(bool win) {
             _departmentSlots.ForEach(slot => slot.slot.OnSetObject.Unsubscribe(OnTaskAssigned));
@@ -126,7 +123,10 @@ namespace _Game.Scripts {
                 _spawnTasksCoroutine = null;
             }
 
-            Hide(() => _onEnd?.Invoke(win, FinishedTasks));
+            Hide(() => {
+                AudioController.Instance.SetMusicVolume(0.3f);
+                _onEnd?.Invoke(win, FinishedTasks);
+            });
         }
 
         private void OnTaskAssigned(DropComponent slot) {
@@ -139,9 +139,11 @@ namespace _Game.Scripts {
             var department = _departmentSlots.First(departmentSlot => departmentSlot.slot == slot).department;
 
             if (task.Data.Department == department) {
+                AudioController.Instance.PlaySound("correct");
                 FinishedTasks++;
                 DeathPoints -= _pointsPerSuccess;
             } else {
+                AudioController.Instance.PlaySound("wrong");
                 DeathPoints += _pointsPerFail;
             }
 
@@ -173,7 +175,10 @@ namespace _Game.Scripts {
                 var task = Instantiate(_taskPrefab);
                 _tasks.Add(task);
                 task.Load(taskData);
-                task.DragComponent.OnClick.Subscribe(_ => ShowTaskWindow(taskData));
+                task.DragComponent.OnClick.Subscribe(_ => {
+                    AudioController.Instance.PlaySound("click");
+                    ShowTaskWindow(taskData);
+                });
 
                 _build.AnimateSpawnTask(task, _moveRoot, slot);
 
