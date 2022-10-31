@@ -30,8 +30,8 @@ namespace _Game.Scripts.UI {
         }
 
         protected override void PerformShow(Action onDone = null) {
-            _build.transform.position = _buildPoint.position;
-            _build.RectTransform.anchoredPosition += Vector2.up * Screen.height;
+            // _build.transform.position = _buildPoint.position;
+            // _build.RectTransform.anchoredPosition += Vector2.up * 1;
             _group.alpha = 0f;
             _group.interactable = false;
 

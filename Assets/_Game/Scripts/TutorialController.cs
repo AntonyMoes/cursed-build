@@ -15,11 +15,14 @@ namespace _Game.Scripts {
         [SerializeField] private RectTransform _stepTextTransform;
         [SerializeField] private GameObject _nextStepText;
         [SerializeField] private TutorialStep[] _steps;
+        [SerializeField] private TutorialStep[] _introSteps;
+
+        private TutorialStep[] _currentSteps;
 
         private const float AnimationDuration = 0.4f;
         private int _currentStep;
+        private Action _onDone;
         private Action _spawnAndWait;
-        private Action _continueSpawning;
         private Action<Action> _openTaskWindow;
         private Action<Action> _closeTaskWindow;
 
@@ -28,21 +31,30 @@ namespace _Game.Scripts {
             _tutorialGroup.gameObject.SetActive(false);
         }
 
-        public void StartTutorial(Action spawnAndWait, Action continueSpawning, Action<Action> openTaskWindow, Action<Action> closeTaskWindow) {
+        public void StartGameTutorial(Action spawnAndWait, Action continueSpawning, Action<Action> openTaskWindow, Action<Action> closeTaskWindow) {
             _spawnAndWait = spawnAndWait;
-            _continueSpawning = continueSpawning;
             _openTaskWindow = openTaskWindow;
             _closeTaskWindow = closeTaskWindow;
 
+            StartTutorial(_steps, continueSpawning);
+        }
+        
+        public void StartIntro(Action onDone) {
+            StartTutorial(_introSteps, onDone);
+        }
+
+        private void StartTutorial(TutorialStep[] steps, Action onDone = null) {
+            _currentSteps = steps;
             _currentStep = -1;
+            _onDone = onDone;
             _tutorialGroup.alpha = 0f;
             _stepText.color = _stepText.color.WithAlpha(1f);
             NextStep();
         }
 
         private void NextStep() {
-            if (++_currentStep >= _steps.Length) {
-                HideHider();
+            if (++_currentStep >= _currentSteps.Length) {
+                HideHider(_onDone);
                 return;
             }
 
@@ -52,7 +64,7 @@ namespace _Game.Scripts {
             var stepProcess = new SerialProcess();
             stepProcess.Add(AsyncProcess.From(ShowHider, _currentStep == 0));
             stepProcess.Add(new LazyProcess(() => {
-                return _steps[_currentStep].action switch {
+                return _currentSteps[_currentStep].action switch {
                     TutorialAction.None => new DummyProcess(),
                     TutorialAction.SpawnAndWait => new SyncProcess(_spawnAndWait),
                     TutorialAction.OpenTaskWindow => new AsyncProcess(_openTaskWindow),
@@ -68,7 +80,7 @@ namespace _Game.Scripts {
         }
 
         private void ShowHider(bool initial, Action onDone) {
-            var currentStep = _steps[_currentStep];
+            var currentStep = _currentSteps[_currentStep];
             SetPositionSettings(_stepTextTransform, currentStep.position);
 
             if (initial) {
@@ -91,10 +103,10 @@ namespace _Game.Scripts {
                 .OnComplete(() => onDone?.Invoke());
         }
 
-        private void HideHider() {
+        private void HideHider(Action onDone) {
             _tutorialGroup.DOFade(0f, AnimationDuration).OnComplete(() => {
                 _tutorialGroup.gameObject.SetActive(false);
-                _continueSpawning();
+                onDone?.Invoke();
             });
         }
 
@@ -118,6 +130,10 @@ namespace _Game.Scripts {
                 case TextPosition.Right:
                     textTransform.pivot = new Vector2(center - pivotDelta, center);
                     textTransform.anchorMax = textTransform.anchorMin = new Vector2(1f, center);
+                    break;
+                case TextPosition.Center:
+                    textTransform.pivot = new Vector2(center, center);
+                    textTransform.anchorMax = textTransform.anchorMin = new Vector2(center, center);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(position), position, null);
@@ -144,7 +160,8 @@ namespace _Game.Scripts {
             Down,
             Up,
             Left,
-            Right
+            Right,
+            Center
         }
     }
 }

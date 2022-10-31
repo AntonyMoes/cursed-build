@@ -100,7 +100,7 @@ namespace _Game.Scripts {
                 AudioController.Instance.SetMusicVolume(0.3f);
                 AudioController.Instance.PlayMusic();
                 _spawnPaused = true;
-                _tutorialController.StartTutorial(() => {
+                _tutorialController.StartGameTutorial(() => {
                     _spawnTasksCoroutine = StartCoroutine(SpawnTasks(shuffledTasks));
                 }, () => {
                     AudioController.Instance.SetMusicVolume(1f, false);
