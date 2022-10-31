@@ -16,7 +16,7 @@ namespace _Game.Scripts {
         }
 
         public void SetMusicVolume(float volume, bool instant = true) {
-            _music.DOFade(_defaultMusicVolume * volume, instant ? 0f : 0.3f);
+            _music.DOFade(_defaultMusicVolume * volume, instant ? 0f : 0.55f);
         }
 
         public void PlayMusic() {
